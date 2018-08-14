@@ -1,5 +1,5 @@
 # Where in the user's profile directory should the items be copied?
-$ProfDir = "Pictures
+$ProfDir = "Pictures"
 
 # Make target folder c:\users\username\$ProfDir\$NewDir
 $NewDir = New-Item `
