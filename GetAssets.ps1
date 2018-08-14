@@ -4,7 +4,7 @@ $ProfDir = "Pictures"
 # Make target folder c:\users\username\$ProfDir\$NewDir
 $NewDir = New-Item `
 	-Path ((Get-Content env:/USERPROFILE) + "\" + $ProfDir) `
-	-Name ("Assets_" + (get-date -UFormat %Y%m%d_%H%M%S)) `
+	-Name ("Assets_" + (get-date -UFormat "%Y%m%d_%H%M%S")) `
 	-ItemType Directory `
 	-Verbose
 
