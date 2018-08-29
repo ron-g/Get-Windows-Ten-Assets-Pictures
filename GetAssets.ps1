@@ -1,10 +1,56 @@
-# Where in the user's profile directory should the items be copied?
-$ProfDir = "Pictures"
+<#
+.SYNOPSIS
+GetAssets finds the Windows Ten ...Assets folder inside a user's profile directory and copies the spotlight desktop backgrounds to a new location before they disappear.
+
+.DESCRIPTION
+GetAssets finds the Windows Ten ...Assets folder inside a user's profile directory and copies the spotlight desktop backgrounds to a new location before they disappear.
+
+.PARAMETER ProfDir
+The "ProfDir" argument defines a folder inside the current user's profile directory, e.g. "c:\Users\jdoe\Pictures", where the pictures should be copied. The default value for ProfDir is "Pictures".
+
+.PARAMETER AbsolutePath
+The "AbsolutePath" argument defines an alternative path to store the pictures, which doesn't have to be in the user's profile directory.
+
+.EXAMPLE
+GetAssets.ps1 -AbsolutePath "B:\GoogleDrive\PicsToSort"
+
+Stores the pictures in a GoogleDrive folder on a different data volume.
+
+.EXAMPLE
+GetAssets.ps1 -ProfDir "Pictures"
+
+Stores the pictures in the "Pictures" folder of the current user.
+#>
+
+[CmdletBinding()]
+param (
+	# Where in the user's profile directory should the items be copied?
+	[Parameter(Mandatory=$False)]
+	[string]$ProfDir = "Pictures",
+	
+	[Parameter(Mandatory=$False)]
+	[Alias('Path')]
+	[string]$AbsolutePath = ""	
+)
+
+$WARNTEXTBG='black'
+$WARNTEXTFG='yellow'
+
+if($ProfDir -and $AbsolutePath){
+	$RootPath = $AbsolutePath
+	Write-Host `
+		-BackgroundColor $WARNTEXTBG `
+		-ForegroundColor $WARNTEXTFG `
+		"`nArguments `"ProfDir`" and `"AbsolutePath`" are mutually exclusive.`nBecause both were defined, we're using `"$AbsolutePath`".`n"
+	}
+else {
+	$RootPath = (Get-Content env:/USERPROFILE) + "\" + $ProfDir
+	}
 
 # Make target folder c:\users\username\$ProfDir\$NewDir
 $NewDir = New-Item `
-	-Path ((Get-Content env:/USERPROFILE) + "\" + $ProfDir) `
-	-Name ("Assets_" + (get-date -UFormat "%Y%m%d_%H%M%S")) `
+	-Path $RootPath `
+	-Name ("Assets_" + (Get-Content env:/COMPUTERNAME) + "_" + (Get-Content env:/USERNAME) + "_" + (get-date -UFormat "%Y%m%d_%H%M%S")) `
 	-ItemType Directory `
 	-Verbose
 
@@ -24,12 +70,13 @@ Get-ChildItem `
 	-Filter "????????????????????????????????????????????????????????????????" `
 	-Recurse `
 	-Force | `
-		ForEach-Object { 
-			copy-item `
-				-Path $_.FullName `
-				-destination ("$NewDir" + "\" + "$_" + ".png") `
-				-Verbose
-			}
+		Where-Object { $_.Length -gt 102400 } | `
+			ForEach-Object { 
+				copy-item `
+					-Path $_.FullName `
+					-destination ("$NewDir" + "\" + "$_" + ".png") `
+					-Verbose
+				}
 
 # Start-Sleep is added to allow quick review of the Verbose output.
 Start-Sleep 10
